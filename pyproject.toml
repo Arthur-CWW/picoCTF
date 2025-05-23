@@ -24,8 +24,10 @@ classifiers = [
   "Topic :: Security",
 ]
 dependencies = [
+  "pydantic>=2.10.6",
   # Core dependencies - keeping minimal for environment deployment
-  "typing-extensions>=4.0.0", # For better type hints on older Python
+  "rich>=14.0.0",
+  "typing-extensions>=4.0.0",  # For better type hints on older Python
   "tyro>=0.9.21",
 ]
 
@@ -36,7 +38,8 @@ Repository = "https://github.com/your-username/ctf-env"
 
 [project.scripts]
 convert-picoctf = "src.ctf_dataset:convert_picoctf_to_dataset"
-ctf-cli = "src.ctf_cli:main"
+ctf = "src.ctf_cli_improved:main"
+# ctf-cli = "src.ctf_cli:main"
 ctf-dataset = "src.ctf_dataset:main"
 
 [project.optional-dependencies]
