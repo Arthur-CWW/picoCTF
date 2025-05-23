@@ -8,6 +8,7 @@ Features:
 - Admin commands for environment inspection
 - Type-safe operations with pydantic models
 """
+from .nested import subcommand_cli_from_nested_dict
 
 import sys
 import time
@@ -19,7 +20,7 @@ import logging
 import random
 
 import tyro
-from tyro.extras import SubcommandApp
+from tyro.extras import SubcommandApp,subcommand_cli_from_dict
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -39,6 +40,7 @@ from .challenge_loader import ChallengeLoader, load_challenges_dynamically
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
+from .ctf_dataset import app as ctf_dataset_main
 console = Console()
 
 # Create the main application
@@ -708,14 +710,14 @@ def admin_inspect(
 def main() -> None:
     """Main CLI entry point with tyro SubcommandApp."""
 
-    @app.command(name="interactive")
     def interactive(
+        challenge_id: Optional[str] = None,
         path: Path = Path("."),
         sources: str = "picoctf_problems,json_datasets",
         session: Optional[Path] = None,
         verbose: bool = False
     ) -> None:
-        """Start interactive CTF session."""
+        """Start interactive CTF session, optionally starting with a specific challenge."""
         log_level = "DEBUG" if verbose else "WARNING"
         config = CLIConfig(
             base_path=path,
@@ -723,41 +725,21 @@ def main() -> None:
             session_file=session,
             log_level=log_level  # type: ignore
         )
-        interactive_session(config)
 
-    # Short aliases for interactive - these all do the same thing
-    @app.command(name="i")
-    def i(path: Path = Path("."), sources: str = "picoctf_problems,json_datasets",
-          session: Optional[Path] = None, verbose: bool = False) -> None:
-        """Start interactive session."""
-        interactive(path, sources, session, verbose)
+        session_obj = CTFSession(config)
+        session_obj.load_challenges()
 
-    @app.command(name="shell")
-    def shell(path: Path = Path("."), sources: str = "picoctf_problems,json_datasets",
-              session: Optional[Path] = None, verbose: bool = False) -> None:
-        """Start interactive session."""
-        interactive(path, sources, session, verbose)
+        # If challenge_id is provided, select it automatically
+        if challenge_id:
+            session_obj.select_challenge(challenge_id)
 
-    # Even shorter alias
-    @app.command(name="s")
-    def s(path: Path = Path("."), sources: str = "picoctf_problems,json_datasets",
-          session: Optional[Path] = None, verbose: bool = False) -> None:
-        """Start interactive session."""
-        interactive(path, sources, session, verbose)
+        session_obj.start_interactive()
 
-    @app.command(name="sources")
     def sources_cmd(path: Path = Path(".")) -> None:
         """List challenge sources."""
         config = CLIConfig(base_path=path)
         list_sources(config)
 
-    # Shorter alias for sources
-    @app.command(name="src")
-    def src(path: Path = Path(".")) -> None:
-        """List challenge sources."""
-        sources_cmd(path)
-
-    @app.command(name="list")
     def list_cmd(
         path: Path = Path("."),
         sources: str = "picoctf_problems,json_datasets",
@@ -814,20 +796,6 @@ def main() -> None:
 
         console.print(table)
 
-    # Multiple aliases for list
-    @app.command(name="ls")
-    def ls(path: Path = Path("."), sources: str = "picoctf_problems,json_datasets",
-           category: Optional[str] = None, difficulty: Optional[str] = None) -> None:
-        """List challenges."""
-        list_cmd(path, sources, category, difficulty)
-
-    @app.command(name="l")
-    def l(path: Path = Path("."), sources: str = "picoctf_problems,json_datasets",
-          category: Optional[str] = None, difficulty: Optional[str] = None) -> None:
-        """List challenges."""
-        list_cmd(path, sources, category, difficulty)
-
-    @app.command(name="inspect")
     def inspect_cmd(
         challenge_id: str,
         path: Path = Path("."),
@@ -846,33 +814,6 @@ def main() -> None:
         )
         admin_inspect(config, challenge_id, None, files, env)
 
-    # Multiple aliases for inspect
-    @app.command(name="cat")
-    def cat(challenge_id: str, path: Path = Path("."), sources: str = "picoctf_problems,json_datasets",
-            files: bool = False, env: bool = False, all: bool = False) -> None:
-        """Inspect a challenge."""
-        inspect_cmd(challenge_id, path, sources, files, env, all)
-
-    @app.command(name="show")
-    def show(challenge_id: str, path: Path = Path("."), sources: str = "picoctf_problems,json_datasets",
-             files: bool = False, env: bool = False, all: bool = False) -> None:
-        """Inspect a challenge."""
-        inspect_cmd(challenge_id, path, sources, files, env, all)
-
-    @app.command(name="info")
-    def info(challenge_id: str, path: Path = Path("."), sources: str = "picoctf_problems,json_datasets",
-             files: bool = False, env: bool = False, all: bool = False) -> None:
-        """Inspect a challenge."""
-        inspect_cmd(challenge_id, path, sources, files, env, all)
-
-    # Even shorter alias for inspect
-    @app.command(name="c")
-    def c(challenge_id: str, path: Path = Path("."), sources: str = "picoctf_problems,json_datasets",
-          files: bool = False, env: bool = False, all: bool = False) -> None:
-        """Inspect a challenge."""
-        inspect_cmd(challenge_id, path, sources, files, env, all)
-
-    @app.command(name="stats")
     def stats_cmd(
         path: Path = Path("."),
         session: Optional[Path] = None
@@ -912,37 +853,38 @@ def main() -> None:
 
         console.print(Panel(stats_text.strip(), title="Stats", border_style="green"))
 
-    # Multiple aliases for stats
-    @app.command(name="status")
-    def status(path: Path = Path("."), session: Optional[Path] = None) -> None:
-        """Show challenge statistics."""
-        stats_cmd(path, session)
+    # Dictionary-based alias system for cleaner code
+    aliases = {
+        # Interactive aliases
+        "i": interactive,
+        "shell": interactive,
 
-    @app.command(name="st")
-    def st(path: Path = Path("."), session: Optional[Path] = None) -> None:
-        """Show challenge statistics."""
-        stats_cmd(path, session)
+        # List aliases
+        "ls": list_cmd,
+        "l": list_cmd,
 
-    # Add quick start command
-    @app.command(name="quick")
-    def quick(session: Optional[Path] = None) -> None:
-        """Quick start with current directory and default session."""
-        interactive(Path("."), "picoctf_problems,json_datasets", session, False)
+        # Sources aliases
+        "src": sources_cmd,
 
-    # Add alias for quick
-    @app.command(name="q")
-    def q(session: Optional[Path] = None) -> None:
-        """Quick start."""
-        quick(session)
+        # Inspect aliases
+        "info": inspect_cmd,
+        "show": inspect_cmd,
+        "cat": inspect_cmd,
+
+        # Stats aliases
+        "st": stats_cmd,
+        "status": stats_cmd,
+        # Quick aliases
+        # "data": ctf_dataset_main.cli,
+        "data" : ctf_dataset_main._subcommands.copy()
+    }
 
     # Check if no arguments are provided and default to interactive
     if len(sys.argv) == 1:
-        # No command provided, start interactive mode
         interactive()
         return
-
-    # Run the CLI
-    app.cli(description="🚩 CTF Environment CLI")
+    # subcommand_cli_from_dict(aliases)
+    subcommand_cli_from_nested_dict(aliases)
 
 
 if __name__ == "__main__":

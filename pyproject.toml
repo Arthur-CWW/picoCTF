@@ -38,7 +38,7 @@ Repository = "https://github.com/your-username/ctf-env"
 
 [project.scripts]
 convert-picoctf = "src.ctf_dataset:convert_picoctf_to_dataset"
-ctf = "src.ctf_cli_improved:main"
+ctf = "src.cli:main"
 # ctf-cli = "src.ctf_cli:main"
 ctf-dataset = "src.ctf_dataset:main"
 

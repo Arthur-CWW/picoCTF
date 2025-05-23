@@ -19,6 +19,9 @@ try:
 except ImportError:
     from typing import Literal  # Python 3.8+
 
+import tyro
+from tyro.extras import SubcommandApp
+
 
 class DifficultyLevel(Enum):
     """Enumeration for challenge difficulty levels."""
@@ -406,36 +409,90 @@ def _clean_description(description: str) -> str:
     return description
 
 
-def main() -> None:
-    """Main function for CLI usage."""
-    if len(sys.argv) > 1 and sys.argv[1] == "convert":
-        if len(sys.argv) < 3:
-            print("Usage: python -m src.ctf_dataset convert <source_dir> [target_dir]")
-            sys.exit(1)
+# Create the tyro SubcommandApp
+# app = ()
+app = SubcommandApp()
 
-        source_dir = sys.argv[2]
-        target_dir = sys.argv[3] if len(sys.argv) > 3 else "env/dataset"
-        convert_picoctf_to_dataset(source_dir, target_dir)
-    else:
-        # Demo usage
-        dataset = CTFDataset()
-        stats = dataset.get_dataset_stats()
-        print("Dataset Stats:")
-        print(f"  Total challenges: {stats.total_challenges}")
-        print(f"  Categories: {dict(stats.categories)}")
-        print(f"  Difficulties: {stats.difficulties}")
-        print(f"  Total points: {stats.total_points}")
 
-        # Export dataset
-        dataset.export_dataset("ctf_dataset_export.json")
+@app.command(name="convert")
+def convert_cmd(
+    source_dir: Path,
+    target_dir: Path = Path("env/dataset")
+) -> None:
+    """Convert original picoCTF problems to dataset format."""
+    convert_picoctf_to_dataset(source_dir, target_dir)
 
-        # Test random sampling
-        if dataset.challenges:
-            print("\nRandom challenge:")
-            random_challenge = dataset.get_random_challenge()
-            print(f"  {random_challenge.name}: {random_challenge.description}")
-            print(f"  Flag: {random_challenge.flag}")
+@app.command(name="stats")
+def stats_cmd(
+    data_dir: Path = Path("env/dataset")
+) -> None:
+    """Show dataset statistics."""
+    dataset = CTFDataset(data_dir)
+    stats = dataset.get_dataset_stats()
+    print("Dataset Stats:")
+    print(f"  Total challenges: {stats.total_challenges}")
+    print(f"  Categories: {dict(stats.categories)}")
+    print(f"  Difficulties: {stats.difficulties}")
+    print(f"  Total points: {stats.total_points}")
+    print(f"  Average points: {stats.avg_points_per_challenge:.1f}")
 
+@app.command(name="export")
+def export_cmd(
+    output_file: Path = Path("ctf_dataset_export.json"),
+    data_dir: Path = Path("env/dataset")
+) -> None:
+    """Export dataset to a JSON file."""
+    dataset = CTFDataset(data_dir)
+    dataset.export_dataset(output_file)
+
+@app.command(name='ls')
+def ls(
+    data_dir: Path = Path("env/dataset"),
+    category: Optional[CategoryType] = None,
+    difficulty: Optional[str] = None,
+    verbose: bool = False
+) -> None:
+    """List challenges with optional filtering."""
+    dataset = CTFDataset(data_dir)
+
+    challenges = dataset.challenges
+
+    # Apply filters
+    if category:
+        challenges = [c for c in challenges if c.category == category]
+
+    if difficulty:
+        try:
+            diff_level = DifficultyLevel(difficulty)
+            challenges = [c for c in challenges if c.difficulty == diff_level]
+        except ValueError:
+            print(f"Invalid difficulty: {difficulty}. Valid options: easy, medium, hard")
+            return
+
+    if not challenges:
+        print("No challenges found matching the criteria.")
+        return
+
+    print(f"Found {len(challenges)} challenge(s):")
+    print("=" * 80)
+
+    for challenge in challenges:
+        print(f"ID: {challenge.id}")
+        print(f"Name: {challenge.name}")
+        print(f"Category: {challenge.category}")
+        print(f"Difficulty: {challenge.difficulty.value}")
+        print(f"Points: {challenge.points}")
+
+        if verbose:
+            print(f"Description: {challenge.description}")
+            if challenge.hints:
+                print(f"Hints: {', '.join(challenge.hints)}")
+            if challenge.files:
+                print(f"Files: {', '.join(challenge.files)}")
+            print(f"Flag: {challenge.flag}")
+
+        print("-" * 40)
 
 if __name__ == "__main__":
-    main()
+    app.cli(description="🏆 CTF Dataset Manager")
+

@@ -6,7 +6,6 @@ Focused on dataset management and interactive testing.
 """
 
 from .ctf_dataset import CTFDataset, CTFChallenge, DifficultyLevel, CategoryType, DatasetStats
-from .ctf_cli import CTFSession, main as cli_main
 from .ctf_models import (
     CTFChallenge as CTFChallengeModel,
     CategoryType as CategoryTypeModel,
@@ -17,7 +16,7 @@ from .ctf_models import (
     SessionState
 )
 from .challenge_loader import ChallengeLoader, load_challenges_dynamically
-from .ctf_cli_improved import main as improved_cli_main
+from .cli import  CTFSession
 
 __version__ = "0.1.0"
 __all__ = [
@@ -27,7 +26,6 @@ __all__ = [
     "CategoryType",
     "DatasetStats",
     "CTFSession",
-    "cli_main",
     # New pydantic models
     "CTFChallengeModel",
     "CategoryTypeModel",
@@ -40,5 +38,4 @@ __all__ = [
     "ChallengeLoader",
     "load_challenges_dynamically",
     # Improved CLI
-    "improved_cli_main",
 ]
