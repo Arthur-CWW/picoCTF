@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 import re
 
-from ctf_dataset import CTFDataset, CTFChallenge, DifficultyLevel, CategoryType
+from .ctf_dataset import CTFDataset, CTFChallenge, DifficultyLevel, CategoryType
 
 
 class CTFSession:
@@ -27,7 +27,7 @@ class CTFSession:
 
     def start(self) -> None:
         """Start the interactive session."""
-        print("🚩 Welcome to picoCTF RL Environment CLI!")
+        print("🚩 Welcome to picoCTF Environment CLI!")
         print("=" * 50)
 
         stats = self.dataset.get_dataset_stats()
@@ -71,6 +71,10 @@ class CTFSession:
                 elif command.startswith('difficulty '):
                     difficulty = command[11:].strip()
                     self.list_by_difficulty(difficulty)
+                elif command in ['files']:
+                    self.show_files()
+                elif command in ['env', 'environment']:
+                    self.show_environment()
                 else:
                     print(f"❌ Unknown command: {command}")
                     print("Type 'help' for available commands")
@@ -94,6 +98,8 @@ class CTFSession:
   info, i              - Show current challenge details
   hint, hints          - Show hints for current challenge
   submit <flag>        - Submit a flag for current challenge
+  files                - Show files for current challenge
+  env, environment     - Show environment info for current challenge
   stats, score         - Show your progress
   quit, exit, q        - Exit the CLI
 
@@ -119,7 +125,8 @@ class CTFSession:
                 solved = "✅" if challenge.id in self.solved_challenges else "⭕"
                 difficulty_emoji = {"easy": "🟢", "medium": "🟡", "hard": "🔴"}
                 diff_emoji = difficulty_emoji.get(challenge.difficulty.value, "⚪")
-                print(f"  {solved} {diff_emoji} {challenge.id:15s} - {challenge.name} ({challenge.points}pts)")
+                files_indicator = "📁" if challenge.files else "  "
+                print(f"  {solved} {diff_emoji} {files_indicator} {challenge.id:15s} - {challenge.name} ({challenge.points}pts)")
 
     def list_by_category(self, category: str) -> None:
         """List challenges by category."""
@@ -137,7 +144,8 @@ class CTFSession:
         print("-" * 40)
         for challenge in challenges:
             solved = "✅" if challenge.id in self.solved_challenges else "⭕"
-            print(f"  {solved} {challenge.id:15s} - {challenge.name} ({challenge.points}pts)")
+            files_indicator = "📁" if challenge.files else "  "
+            print(f"  {solved} {files_indicator} {challenge.id:15s} - {challenge.name} ({challenge.points}pts)")
 
     def list_by_difficulty(self, difficulty: str) -> None:
         """List challenges by difficulty."""
@@ -157,7 +165,8 @@ class CTFSession:
         print("-" * 40)
         for challenge in challenges:
             solved = "✅" if challenge.id in self.solved_challenges else "⭕"
-            print(f"  {solved} {challenge.id:15s} - {challenge.name} ({challenge.points}pts)")
+            files_indicator = "📁" if challenge.files else "  "
+            print(f"  {solved} {files_indicator} {challenge.id:15s} - {challenge.name} ({challenge.points}pts)")
 
     def select_challenge(self, challenge_id: str) -> None:
         """Select a challenge to work on."""
@@ -216,8 +225,58 @@ class CTFSession:
 
         if c.files:
             print(f"\n📁 Files: {', '.join(c.files)}")
+            print("   (Use 'files' command for file details)")
+
+        if c.environment:
+            print(f"\n🔧 Environment: Available (use 'env' command)")
 
         print("\n💡 Use 'hint' for hints, 'submit <flag>' to submit a solution")
+
+    def show_files(self) -> None:
+        """Show files for the current challenge."""
+        if not self.current_challenge:
+            print("❌ No challenge selected")
+            return
+
+        if not self.current_challenge.files:
+            print("📁 No files for this challenge")
+            return
+
+        print(f"\n📁 Files for {self.current_challenge.name}:")
+        files_dir = self.dataset.data_dir / "files"
+
+        for filename in self.current_challenge.files:
+            file_path = files_dir / filename
+            if file_path.exists():
+                size = file_path.stat().st_size
+                print(f"  📄 {filename} ({size} bytes)")
+                print(f"     Location: {file_path}")
+
+                # Show file content preview for small text files
+                if size < 1024 and filename.endswith(('.txt', '.md', '.py', '.js', '.html')):
+                    try:
+                        content = file_path.read_text(encoding='utf-8')[:200]
+                        print(f"     Preview: {content}{'...' if len(content) == 200 else ''}")
+                    except:
+                        print("     (Binary or unreadable content)")
+            else:
+                print(f"  ❌ {filename} (file not found)")
+
+    def show_environment(self) -> None:
+        """Show environment information for the current challenge."""
+        if not self.current_challenge:
+            print("❌ No challenge selected")
+            return
+
+        if not self.current_challenge.environment:
+            print("🔧 No special environment configuration for this challenge")
+            return
+
+        print(f"\n🔧 Environment for {self.current_challenge.name}:")
+        env = self.current_challenge.environment
+
+        for key, value in env.items():
+            print(f"  {key}: {value}")
 
     def show_hints(self) -> None:
         """Show hints for the current challenge."""
@@ -330,7 +389,7 @@ def main() -> None:
     try:
         dataset = CTFDataset()
         if not dataset.challenges:
-            print("❌ No challenges found! Make sure you have challenges in the dataset directory.")
+            print("❌ No challenges found! Make sure you have challenges in the env/dataset directory.")
             sys.exit(1)
     except Exception as e:
         print(f"❌ Error loading dataset: {e}")

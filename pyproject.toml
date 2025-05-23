@@ -1,18 +1,18 @@
 [project]
-name = "picoctf-rl-env"
+name = "ctf-env"
 version = "0.1.0"
-description = "Minimal picoCTF RL Environment for LLM Training with verl"
+description = "CTF Environment and Dataset Manager"
 readme = "README.md"
 requires-python = ">=3.8.1"
 license = { text = "MIT" }
 authors = [
-  { name = "CTF RL Environment", email = "dev@example.com" },
+  { name = "CTF Environment", email = "dev@example.com" },
 ]
-keywords = ["ctf", "cybersecurity", "llm", "reinforcement-learning", "verl"]
+keywords = ["ctf", "cybersecurity", "dataset", "environment"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
-  "Intended Audience :: Science/Research",
+  "Intended Audience :: Education",
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
@@ -20,29 +20,29 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
-  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Education",
   "Topic :: Security",
 ]
 dependencies = [
-  # Core dependencies - keeping minimal for docker deployment
-  "typing-extensions>=4.0.0",  # For better type hints on older Python
+  # Core dependencies - keeping minimal for environment deployment
+  "typing-extensions>=4.0.0", # For better type hints on older Python
+  "tyro>=0.9.21",
 ]
 
 [project.urls]
-Homepage = "https://github.com/your-username/picoctf-rl-env"
-Issues = "https://github.com/your-username/picoctf-rl-env/issues"
-Repository = "https://github.com/your-username/picoctf-rl-env"
+Homepage = "https://github.com/your-username/ctf-env"
+Issues = "https://github.com/your-username/ctf-env/issues"
+Repository = "https://github.com/your-username/ctf-env"
 
 [project.scripts]
-convert-picoctf = "ctf_dataset:convert_picoctf_to_dataset"
-ctf-cli = "ctf_cli:main"
-ctf-dataset = "ctf_dataset:main"
-ctf-server = "ctf_env_server:main"
+convert-picoctf = "src.ctf_dataset:convert_picoctf_to_dataset"
+ctf-cli = "src.ctf_cli:main"
+ctf-dataset = "src.ctf_dataset:main"
 
 [project.optional-dependencies]
 # All optional dependencies
 all = [
-  "picoctf-rl-env[dev,server,analysis]",
+  "ctf-env[dev,server,analysis]",
 ]
 # For data analysis and visualization
 analysis = [
@@ -67,14 +67,6 @@ server = [
   "pydantic>=2.0.0",
   "httpx>=0.24.0",
 ]
-# For verl integration (add as needed)
-verl = [
-  # verl dependencies will be handled separately
-  # since it's a complex RL framework
-  "torch>=2.0.0",
-  "transformers>=4.30.0",
-  "datasets>=2.10.0",
-]
 
 [build-system]
 requires = ["hatchling"]
@@ -97,6 +89,9 @@ extend-exclude = '''
   | dist
 )/
 '''
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.isort]
 profile = "black"

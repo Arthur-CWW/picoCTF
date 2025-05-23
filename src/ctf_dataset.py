@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-CTF Dataset Manager for verl Integration
+CTF Dataset Manager
 
-Simple dataset interface for CTF challenges that can be consumed by
-reinforcement learning frameworks like verl.
+Core dataset functionality for managing CTF challenges and environments.
+Focused on dataset operations and environment management, not RL training.
 """
 
 import json
@@ -32,7 +32,7 @@ CategoryType = Literal["general", "crypto", "forensics", "web", "binary", "rever
 
 @dataclass(frozen=True)
 class CTFChallenge:
-    """Immutable CTF challenge representation with comprehensive type annotations."""
+    """Immutable CTF challenge representation."""
     id: str
     name: str
     category: CategoryType
@@ -42,6 +42,7 @@ class CTFChallenge:
     hints: List[str]
     points: int
     files: List[str] = field(default_factory=list)
+    environment: Optional[Dict[str, Any]] = None
 
     def __post_init__(self) -> None:
         """Validate challenge data after initialization."""
@@ -64,19 +65,7 @@ class CTFChallenge:
             "hints": self.hints,
             "points": self.points,
             "files": self.files,
-        }
-
-    def to_verl_format(self) -> Dict[str, Any]:
-        """Convert challenge to verl training format."""
-        return {
-            "instruction": f"Solve this {self.category} challenge: {self.description}",
-            "input": "",
-            "output": self.flag,
-            "challenge_id": self.id,
-            "category": self.category,
-            "difficulty": self.difficulty.value,
-            "points": self.points,
-            "hints": self.hints,
+            "environment": self.environment,
         }
 
 
@@ -91,9 +80,9 @@ class DatasetStats:
 
 
 class CTFDataset:
-    """Dataset manager for CTF challenges with comprehensive type safety."""
+    """Dataset manager for CTF challenges."""
 
-    def __init__(self, data_dir: Union[str, Path] = Path("dataset")) -> None:
+    def __init__(self, data_dir: Union[str, Path] = Path("env/dataset")) -> None:
         """Initialize dataset manager."""
         self.data_dir: Path = Path(data_dir)
         self.challenges: List[CTFChallenge] = []
@@ -141,6 +130,7 @@ class CTFDataset:
             hints=data.get("hints", []),
             points=data.get("points", 100),
             files=data.get("files", []),
+            environment=data.get("environment"),
         )
 
     def _add_challenge(self, challenge: CTFChallenge) -> None:
@@ -209,7 +199,7 @@ class CTFDataset:
         ]
 
         # Create dataset directory and files
-        self.data_dir.mkdir(exist_ok=True)
+        self.data_dir.mkdir(parents=True, exist_ok=True)
 
         dataset = {"challenges": sample_challenges_data}
         with open(self.data_dir / "challenges.json", "w", encoding="utf-8") as f:
@@ -289,16 +279,6 @@ picoCTF{hidden_in_plain_sight}"""
             total_points=total_points,
             avg_points_per_challenge=avg_points,
         )
-
-    def export_for_verl(self, output_file: Union[str, Path]) -> None:
-        """Export dataset in format suitable for verl training."""
-        output_path = Path(output_file)
-        verl_data = [challenge.to_verl_format() for challenge in self.challenges]
-
-        with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(verl_data, f, indent=2, ensure_ascii=False)
-
-        print(f"Exported {len(verl_data)} challenges for verl to {output_path}")
 
     def export_dataset(self, output_file: Union[str, Path]) -> None:
         """Export the full dataset to a file."""
@@ -430,11 +410,11 @@ def main() -> None:
     """Main function for CLI usage."""
     if len(sys.argv) > 1 and sys.argv[1] == "convert":
         if len(sys.argv) < 3:
-            print("Usage: python ctf_dataset.py convert <source_dir> [target_dir]")
+            print("Usage: python -m src.ctf_dataset convert <source_dir> [target_dir]")
             sys.exit(1)
 
         source_dir = sys.argv[2]
-        target_dir = sys.argv[3] if len(sys.argv) > 3 else "dataset"
+        target_dir = sys.argv[3] if len(sys.argv) > 3 else "env/dataset"
         convert_picoctf_to_dataset(source_dir, target_dir)
     else:
         # Demo usage
@@ -446,8 +426,8 @@ def main() -> None:
         print(f"  Difficulties: {stats.difficulties}")
         print(f"  Total points: {stats.total_points}")
 
-        # Export for verl
-        dataset.export_for_verl("ctf_dataset_for_verl.json")
+        # Export dataset
+        dataset.export_dataset("ctf_dataset_export.json")
 
         # Test random sampling
         if dataset.challenges:

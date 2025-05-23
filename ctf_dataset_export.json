@@ -1,0 +1,94 @@
+{
+  "challenges": [
+    {
+      "id": "basic_flag_001",
+      "name": "Find the Flag",
+      "category": "general",
+      "difficulty": "easy",
+      "description": "The flag is right here: picoCTF{welcome_to_ctf}",
+      "flag": "picoCTF{welcome_to_ctf}",
+      "hints": [
+        "Look in the description"
+      ],
+      "points": 50,
+      "files": [],
+      "environment": null
+    },
+    {
+      "id": "caesar_001",
+      "name": "Caesar Cipher",
+      "category": "crypto",
+      "difficulty": "easy",
+      "description": "Decrypt this: fvpbPGS{jryq_gneq_qrp_fgheq}",
+      "flag": "picoCTF{weld_targ_dec_sturd}",
+      "hints": [
+        "Try ROT13",
+        "Caesar cipher with shift 13"
+      ],
+      "points": 100,
+      "files": [],
+      "environment": null
+    },
+    {
+      "id": "base64_001",
+      "name": "Base64 Decode",
+      "category": "general",
+      "difficulty": "easy",
+      "description": "Decode: cGljb0NURntlbmNvZGluZ19pc19ub3RfZW5jcnlwdGlvbn0=",
+      "flag": "picoCTF{encoding_is_not_encryption}",
+      "hints": [
+        "This looks like base64",
+        "Use a decoder"
+      ],
+      "points": 75,
+      "files": [],
+      "environment": null
+    },
+    {
+      "id": "xor_001",
+      "name": "Single Byte XOR",
+      "category": "crypto",
+      "difficulty": "medium",
+      "description": "Find the key and decrypt: 73626960647f6b206821204f21254f7d694f7624662065622127234f726927756d",
+      "flag": "picoCTF{sgl_byt_xor_is_weak}",
+      "hints": [
+        "Try XORing with single bytes",
+        "Look for readable text"
+      ],
+      "points": 150,
+      "files": [],
+      "environment": null
+    },
+    {
+      "id": "hidden_001",
+      "name": "Hidden Data",
+      "category": "forensics",
+      "difficulty": "easy",
+      "description": "There's something hidden in this text file.",
+      "flag": "picoCTF{hidden_in_plain_sight}",
+      "hints": [
+        "Check the end of files",
+        "Look for unusual spacing"
+      ],
+      "points": 100,
+      "files": [
+        "data.txt"
+      ],
+      "environment": null
+    }
+  ],
+  "stats": {
+    "total_challenges": 5,
+    "categories": {
+      "general": 2,
+      "crypto": 2,
+      "forensics": 1
+    },
+    "difficulties": {
+      "easy": 4,
+      "medium": 1
+    },
+    "total_points": 475,
+    "avg_points_per_challenge": 95.0
+  }
+}

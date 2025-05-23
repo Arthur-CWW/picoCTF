@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  ctf-dev:
+    build: .
+    container_name: ctf-environment
+    volumes:
+      # Mount current directory to /workspace for live editing
+      - .:/workspace
+      # Persist dataset and work
+      - ./env/dataset:/workspace/env/dataset
+      - ./env/challenges:/workspace/env/challenges
+      - ./env/writeups:/workspace/env/writeups
+      - ./env/tools:/workspace/env/tools
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    environment:
+      - TERM=xterm-256color
+      - PYTHONPATH=/workspace
+    # Optional: expose ports for web interfaces
+    ports:
+      - "8000:8000" # For future web interface
+      - "8888:8888" # For Jupyter if needed
+    command: bash
+
+  # CLI testing container
+  ctf-cli:
+    build: .
+    container_name: ctf-cli-test
+    volumes:
+      - .:/workspace
+      - ./env/dataset:/workspace/env/dataset
+    working_dir: /workspace
+    environment:
+      - PYTHONPATH=/workspace
+    command: uv run python -m src.ctf_cli
+
+  # Dataset management container
+  ctf-dataset:
+    build: .
+    container_name: ctf-dataset-mgr
+    volumes:
+      - .:/workspace
+      - ./env/dataset:/workspace/env/dataset
+    working_dir: /workspace
+    environment:
+      - PYTHONPATH=/workspace
+    command: uv run python -m src.ctf_dataset
