@@ -1,14 +1,3 @@
-#!/usr/bin/env python3
-"""
-Advanced CTF CLI with dynamic challenge loading and admin functionality.
-
-Features:
-- Dynamic challenge discovery and loading
-- Tyro-based CLI with rich command line arguments
-- Admin commands for environment inspection
-- Type-safe operations with pydantic models
-"""
-from .nested import subcommand_cli_from_nested_dict
 
 import sys
 import time
@@ -18,6 +7,7 @@ from typing import Optional, List, Dict, Any, Literal, Union, Callable
 from dataclasses import dataclass, field
 import logging
 import random
+from .utils import subcommand_cli_from_nested_dict
 
 import tyro
 from tyro.extras import SubcommandApp,subcommand_cli_from_dict

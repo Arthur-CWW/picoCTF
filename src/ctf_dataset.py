@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-"""
-CTF Dataset Manager
-
-Core dataset functionality for managing CTF challenges and environments.
-Focused on dataset operations and environment management, not RL training.
-"""
-
 import json
 import random
 import sys
@@ -445,7 +437,7 @@ def export_cmd(
     dataset = CTFDataset(data_dir)
     dataset.export_dataset(output_file)
 
-@app.command(name='ls')
+@app.command(name='ls' )
 def ls(
     data_dir: Path = Path("env/dataset"),
     category: Optional[CategoryType] = None,
@@ -494,5 +486,11 @@ def ls(
         print("-" * 40)
 
 if __name__ == "__main__":
-    app.cli(description="🏆 CTF Dataset Manager")
+    app.cli(description="""
+CTF Dataset Manager
+
+Core dataset functionality for managing CTF challenges and environments.
+Focused on dataset operations and environment management, not RL training.
+"""
+)
 
