@@ -1,0 +1,26 @@
+# Minimal dependencies for picoCTF RL Environment
+# Use uv for package management: uv add <package>
+
+# Core dependencies (already in Python standard library)
+# pathlib - built-in
+# json - built-in
+# re - built-in
+# dataclasses - built-in (Python 3.7+)
+# typing - built-in (Python 3.5+)
+
+# Optional dependencies for extended functionality
+# For real LLM integration (add as needed):
+# openai>=1.0.0
+# anthropic>=0.7.0
+# transformers>=4.20.0
+# torch>=2.0.0
+
+# For data analysis (add as needed):
+# pandas>=1.5.0
+# matplotlib>=3.5.0
+# seaborn>=0.11.0
+
+# For web interface (add as needed):
+# fastapi>=0.95.0
+# uvicorn>=0.20.0
+# jinja2>=3.1.0

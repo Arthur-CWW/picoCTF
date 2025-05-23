@@ -18,3 +18,5 @@ vault.yml
 # terraform state
 .terraform
 *terraform.tfstate*
+
+__pycache__/

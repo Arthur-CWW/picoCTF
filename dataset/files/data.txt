@@ -1,0 +1,9 @@
+This is a normal looking file.
+Nothing suspicious here.
+Just some regular content for analysis.
+
+Some more text to make it look legitimate.
+Adding more lines...
+
+End of file.
+picoCTF{hidden_in_plain_sight}
